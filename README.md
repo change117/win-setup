@@ -13,7 +13,7 @@ irm https://raw.githubusercontent.com/change117/win-setup/main/install.ps1 | iex
 Accept the UAC prompt. Then walk away. It will:
 
 1. Install **Chocolatey** and make sure **winget** works.
-2. Detect your hardware and install **NVIDIA App** (NVIDIA GPU), **AMD Ryzen Chipset drivers** (AMD CPU) and **AMD Adrenalin** (AMD GPU). If a package source fails it opens the vendor download page instead.
+2. Detect your hardware and install **NVIDIA App** (NVIDIA GPU) and **AMD Ryzen Chipset drivers** (AMD CPU) from Chocolatey. If an AMD GPU is present it opens the **AMD Adrenalin** download page, since no package manager carries Adrenalin. A Ryzen CPU's integrated Radeon counts as an AMD GPU here; its driver is optional when you have a dedicated card, and Windows Update installs one anyway.
 3. Install everything in [`choco-packages.txt`](choco-packages.txt) and [`winget-packages.txt`](winget-packages.txt).
 4. Run **Chris Titus WinUtil** headless with [`winutil.json`](winutil.json), which installs all the apps you selected there (Firefox, Chrome, Brave, VS Code, Git, Node, Steam, Epic, Blender, VLC, 7-Zip, ...).
 5. Print a summary. A full log is saved to `Desktop\win-setup.log`.
@@ -57,5 +57,7 @@ Lines starting with `#` are comments, so you can park apps you don't want right 
 ## Notes
 
 - Re-running is safe. Already-installed packages are skipped or upgraded.
+- Tested 2026-10-29 on a Ryzen 7 9850X3D + RTX 5080 box: 1 min 34 s with WinUtil skipped, NVIDIA App and AMD Chipset Software installed, Adrenalin flagged MANUAL for the iGPU.
+- `winutil.json` must stay UTF-8. WinUtil's own Export writes UTF-16, which fails to load from a URL, so re-save it as UTF-8 (VS Code: click the encoding in the status bar → Save with Encoding → UTF-8) before committing a new export.
 - Needs Windows 10/11 with Windows PowerShell 5.1 (built in). No prerequisites.
 - Everything in this repo is just package names, nothing private.

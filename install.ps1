@@ -231,10 +231,18 @@ function Install-Drivers {
     }
 
     if ($hw.HasAmdGpu) {
-        Install-WithFallback -Name 'AMD Adrenalin' `
-            -WingetIds @('AMD.AMDSoftwareAdrenalinEdition') `
-            -ChocoIds  @('amd-radeon-software', 'amd-adrenalin') `
-            -FallbackUrl 'https://www.amd.com/en/support/download/drivers.html'
+        # No winget or Chocolatey package exists for AMD Adrenalin (checked 2026-10-29),
+        # so the only option is AMD's own auto-detect installer from the download page.
+        # Note: a Ryzen CPU's integrated Radeon shows up as "Microsoft Basic Display Adapter"
+        # (vendor 1002) until a driver is installed, so this fires even with an NVIDIA card.
+        # Windows Update normally supplies the iGPU driver on its own; Adrenalin is optional then.
+        $amdUrl = 'https://www.amd.com/en/support/download/drivers.html'
+        $isIgpuOnly = -not ($hw.GpuNames -match 'Radeon')
+        Write-Host "    AMD GPU detected$(if ($isIgpuOnly) { ' (Ryzen integrated graphics, no driver yet)' }). Opening the AMD download page."
+        Start-Process $amdUrl
+        $note = if ($isIgpuOnly) { "Ryzen iGPU; optional. Windows Update will install a driver, or get Adrenalin from $amdUrl" }
+                else             { "no package source exists; download from $amdUrl" }
+        Add-Result 'AMD Adrenalin' 'MANUAL' $note
     } else {
         Add-Result 'AMD Adrenalin' 'SKIP' 'no AMD GPU detected (Adrenalin needs a Radeon GPU)'
     }
