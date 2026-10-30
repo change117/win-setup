@@ -1,0 +1,12 @@
+# winget packages to install on a fresh PC.
+# One exact package ID per line. Anything after # is a comment. Blank lines are ignored.
+# Find IDs with:  winget search <name>   (use the Id column)
+#
+# Most of your apps are already covered by winutil.json (WinUtil installs them via winget).
+# Use this file for apps WinUtil does not offer.
+
+# --- Examples (remove the # to enable) ---
+# Discord.Discord
+# Spotify.Spotify
+# Microsoft.PowerToys
+# Valve.Steam

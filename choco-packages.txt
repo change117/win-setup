@@ -1,0 +1,20 @@
+# Chocolatey packages to install on a fresh PC.
+# One package ID per line. Anything after # is a comment. Blank lines are ignored.
+# Find IDs at https://community.chocolatey.org/packages  or run:  choco search <name>
+#
+# Driver software (NVIDIA App, AMD Ryzen Chipset, AMD Adrenalin) is handled
+# automatically by install.ps1 based on the hardware it detects, so it does
+# not need to be listed here. Uncomment to force-install regardless of hardware:
+# nvidia-app
+# amd-ryzen-chipset
+
+# --- Add your extras below (examples, remove the # to enable) ---
+# discord
+# spotify
+# obs-studio
+# python
+# powertoys
+# hwinfo
+# ddu                  # Display Driver Uninstaller
+# msiafterburner
+# qbittorrent
