@@ -7,6 +7,12 @@ One command that puts everything back on a freshly installed Windows PC.
 Open **PowerShell** (normal, not admin; it elevates itself) and paste:
 
 ```powershell
+irm is.gd/win117 | iex
+```
+
+`is.gd/win117` is a permanent 301 redirect to the raw script. If the shortener is ever down, the long form does the same thing:
+
+```powershell
 irm https://raw.githubusercontent.com/change117/win-setup/main/install.ps1 | iex
 ```
 
@@ -22,10 +28,10 @@ Reboot when it is done so the driver installs finish.
 
 ## Options
 
-To pass switches you need the long form:
+To pass switches you need this form:
 
 ```powershell
-& ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/change117/win-setup/main/install.ps1))) -SkipWinUtil
+& ([ScriptBlock]::Create((irm is.gd/win117))) -SkipWinUtil
 ```
 
 | Switch | Effect |
@@ -61,3 +67,4 @@ Lines starting with `#` are comments, so you can park apps you don't want right 
 - `winutil.json` must stay UTF-8. WinUtil's own Export writes UTF-16, which fails to load from a URL, so re-save it as UTF-8 (VS Code: click the encoding in the status bar → Save with Encoding → UTF-8) before committing a new export.
 - Needs Windows 10/11 with Windows PowerShell 5.1 (built in). No prerequisites.
 - Everything in this repo is just package names, nothing private.
+- The short link cannot be edited or deleted by anyone (is.gd policy), so it will always point at this repo's `main/install.ps1`. Changing the script means pushing to this repo, never touching the link.

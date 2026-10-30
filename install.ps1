@@ -5,7 +5,10 @@
 .DESCRIPTION
     Run from any PowerShell window on a freshly installed Windows desktop:
 
-        irm https://raw.githubusercontent.com/change117/win-setup/main/install.ps1 | iex
+        irm is.gd/win117 | iex
+
+    (is.gd/win117 is a permanent redirect to
+     https://raw.githubusercontent.com/change117/win-setup/main/install.ps1)
 
     What it does, in order:
       1. Relaunches itself as Administrator if needed.
@@ -18,7 +21,7 @@
 
     To pass switches, use this form instead of the plain one-liner:
 
-        & ([ScriptBlock]::Create((irm https://raw.githubusercontent.com/change117/win-setup/main/install.ps1))) -SkipWinUtil
+        & ([ScriptBlock]::Create((irm is.gd/win117))) -SkipWinUtil
 
 .PARAMETER SkipWinUtil
     Do not run WinUtil at the end.
