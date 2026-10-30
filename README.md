@@ -2,6 +2,8 @@
 
 One command that puts everything back on a freshly installed Windows PC.
 
+**Doing a full wipe and reinstall? Follow [REINSTALL.md](REINSTALL.md) step by step.**
+
 ## The one-liner
 
 Open **PowerShell** (normal, not admin; it elevates itself) and paste:
