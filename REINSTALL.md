@@ -1,5 +1,21 @@
 # Fresh reinstall checklist
 
+## Short version
+
+1. Back up anything you want from `C:\Users\onlin` to D: or E:. Leave the Ethernet cable in.
+2. Boot the Rufus USB: tap **F11** at the MSI logo, pick the **UEFI:** USB entry.
+3. In Setup, at the "where to install" screen: **Shift+F10** → `diskpart` → `list disk` → `select disk N` → `detail disk` until it says **Samsung SSD 9100 PRO** → `clean` → `exit` → `exit`. Click **Refresh**, pick that disk's **Unallocated Space**, **Next**.
+4. Reach the desktop. Set UAC to Never notify if you want (your habit).
+5. Right-click Start → Terminal → paste `irm is.gd/win117 | iex` → Enter → Yes if asked.
+6. Walk away. It updates Windows, restarts itself as needed, installs drivers and all apps, restarts once more. If you see a sign-in screen after a restart, sign in; it continues on its own 20 seconds later.
+7. Done when it has restarted and stays at the desktop. Sign in to Steam, Chrome, Claude, etc. Ignore the AMD Adrenalin MANUAL line. Log is `Desktop\win-setup.log`.
+
+If anything stalls: paste the one-liner again. It resumes where it stopped.
+
+---
+
+## Long version
+
 Written 2026-10-30 for this exact PC. Do the steps in order. Nothing here is optional unless it says so.
 
 **This PC:** MSI MAG X870E TOMAHAWK WIFI, Ryzen 7 9850X3D, RTX 5080, Windows 11 Pro 26H2 (Retail digital licence), wired Ethernet.
