@@ -82,7 +82,7 @@ Anything winget and the Chocolatey catalog don't have (programs you built, apps 
 
 **Change one later:** edit it and bump `<version>` in its `.nuspec`. Re-running win-setup (or `choco upgrade all`) updates it.
 
-**Remove one:** delete its folder. **Park one:** rename the folder to start with `_`.
+**Remove one:** delete its folder (stops future installs), and run `choco uninstall <id>` to take it off this PC. Files it copied outside Chocolatey (e.g. `%LOCALAPPDATA%\Programs\<id>`, cloned projects) stay until you delete them. **Park one:** rename the folder to start with `_`.
 
 Notes:
 - Helpers you can use in any package: `Install-GitHubRelease`, `Install-GitProject`, `Invoke-InFolder`, `Install-PackageFiles`, `New-StartMenuShortcut`, plus Chocolatey's own (`Install-ChocolateyPath`, ...). All in [`packages/_shared/winsetup-helpers.ps1`](packages/_shared/winsetup-helpers.ps1).

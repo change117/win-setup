@@ -9,6 +9,12 @@
 #     [Environment]::SetEnvironmentVariable('GITHUB_TOKEN', 'ghp_...', 'User')
 # Public repos need nothing.
 
+# A token saved with the line above after this window opened is not in $env: yet. Read it.
+if (-not $env:GITHUB_TOKEN) {
+    $savedToken = [Environment]::GetEnvironmentVariable('GITHUB_TOKEN', 'User')
+    if ($savedToken) { $env:GITHUB_TOKEN = $savedToken }
+}
+
 # Where Install-GitProject clones your projects. Change this one line to move them all
 # (for example to 'D:\Projects', which survives a reinstall).
 $WinSetupProjectsRoot = Join-Path $env:USERPROFILE 'Projects'
@@ -212,7 +218,8 @@ function Invoke-InFolder {
           Invoke-InFolder $dir { npm install }
           Invoke-InFolder $dir { python -m pip install -r requirements.txt }
       Refreshes PATH first so tools installed earlier in the run are found.
-      Stops the package with an error if the last command fails.
+      Stops the package with an error if the command fails. Use one command per call:
+      in { a; b } only b's exit code is checked.
     #>
     param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][scriptblock]$Script)
     if (Get-Command Update-SessionEnvironment -ErrorAction SilentlyContinue) { Update-SessionEnvironment }
