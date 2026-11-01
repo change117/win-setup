@@ -219,7 +219,7 @@ function Invoke-InFolder {
           Invoke-InFolder $dir { python -m pip install -r requirements.txt }
       Refreshes PATH first so tools installed earlier in the run are found.
       Stops the package with an error if the command fails. Use one command per call:
-      in { a; b } only b's exit code is checked.
+      Invoke-InFolder $dir { a; b } checks only b's exit code.
     #>
     param([Parameter(Mandatory)][string]$Path, [Parameter(Mandatory)][scriptblock]$Script)
     if (Get-Command Update-SessionEnvironment -ErrorAction SilentlyContinue) { Update-SessionEnvironment }
