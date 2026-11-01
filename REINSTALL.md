@@ -67,10 +67,11 @@ Activation needs nothing from you. The Retail licence is a digital licence tied 
 3. Click **Yes** on the UAC prompt if one appears. A new **Administrator** window opens. **Walk away.** From here it is automatic:
    - **Windows Update** installs every pending update and driver (board, chipset, network, base GPU and iGPU). About 5 to 15 minutes.
    - If a restart is needed, it **restarts by itself** (30-second countdown) and continues about 20 seconds after the desktop is back. If you see a sign-in screen, sign in; that is the only thing you might have to do. It checks Windows Update again and repeats, up to 3 restarts.
-   - Then it installs Chocolatey, the **NVIDIA Game Ready driver** (screen may flicker or go black for a few seconds), **NVIDIA App**, **AMD Chipset drivers**, then runs **WinUtil** for the 31 apps. Visual Studio 2026 is the big one. Expect **30 to 60 minutes**.
+   - Then it installs Chocolatey, the **NVIDIA Game Ready driver** (screen may flicker or go black for a few seconds), **NVIDIA App**, **AMD Chipset drivers**, then runs **WinUtil** for the 31 apps, then your **own packages** from `packages/`. Visual Studio 2026 is the big one. Expect **30 to 60 minutes**.
+   - Using private GitHub repos in your packages? Before pasting the one-liner, run `[Environment]::SetEnvironmentVariable('GITHUB_TOKEN','<token>','User')` once.
    - It prints a **Summary**, then **restarts one last time** (60-second countdown).
 4. After that final restart, everything is installed. Check `Desktop\win-setup.log` if you want the details. What the Summary should say:
-   - Windows Update, Chocolatey, winget, NVIDIA Game Ready driver, NVIDIA App, AMD Ryzen Chipset Drivers, WinUtil: **OK**
+   - Windows Update, Chocolatey, winget, NVIDIA Game Ready driver, NVIDIA App, AMD Ryzen Chipset Drivers, WinUtil, every `custom:` line: **OK**
    - AMD Adrenalin: **MANUAL**. Ignore it. It is the Ryzen's built-in graphics; Windows Update already installed its driver and you have the RTX 5080.
 5. Sign in to Steam, Epic, Chrome, Claude, and the rest. That is the only manual part.
 
@@ -100,3 +101,4 @@ Everything Claude knew about this project was on C: and is gone after the wipe. 
 - The Ryzen 7 9850X3D's integrated Radeon (PCI vendor 1002, device 13C0) shows as "Microsoft Basic Display Adapter" until a driver loads, which is why the AMD-GPU branch fires on this machine. That is correct, not a bug.
 - The owner sets UAC to "Never notify" by hand right after install and is fine with that trade-off. Not automated on purpose.
 - The owner wants to extend this further (more apps, more automation). Package lists `choco-packages.txt` and `winget-packages.txt` are intentionally empty so far.
+- Custom software (own programs, GitHub apps, project clones + setup) is done with **Chocolatey packages in `packages/<id>/`** (`<id>.nuspec` + `tools/chocolateyInstall.ps1`). `install.ps1` downloads the repo zip, copies `packages/_shared/winsetup-helpers.ps1` into each package's `tools/`, runs `choco pack` into `C:\ProgramData\win-setup\feed`, registers that as Chocolatey source `win-setup` (priority 1), then `choco upgrade`s each ID. Runs last, after WinUtil, so Git/Node/Python exist. Folders starting with `_` are skipped (`_shared`, `_templates`). `pkg.ps1` is the local tool: `new <id> -Kind github-release|git-project|files`, `test <id>`, `build`. Private repos read `GITHUB_TOKEN` (User env var). The repo is public.
