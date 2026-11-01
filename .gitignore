@@ -1,0 +1,4 @@
+# pkg.ps1 build output
+out/
+# copied into each package at build time from packages/_shared
+packages/*/tools/winsetup-helpers.ps1

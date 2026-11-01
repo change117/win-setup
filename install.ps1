@@ -22,7 +22,9 @@
          NVIDIA Game Ready driver + NVIDIA App, AMD Ryzen Chipset drivers.
       5. Installs every package listed in choco-packages.txt and winget-packages.txt.
       6. Runs Chris Titus WinUtil headless with winutil.json so all your WinUtil apps install.
-      7. Prints a summary, writes a log to your Desktop, and restarts one last time.
+      7. Builds your own Chocolatey packages from the packages\ folder (your programs,
+         GitHub apps, project setups) into a local feed and installs them.
+      8. Prints a summary, writes a log to your Desktop, and restarts one last time.
 
     Windows Update and the automatic restarts only happen on the first run on a PC
     (or with -Fresh). Later runs just install packages, so re-running to add apps is quick
@@ -42,6 +44,8 @@
     Do not install the winget package list.
 .PARAMETER SkipDrivers
     Do not install NVIDIA / AMD driver software.
+.PARAMETER SkipCustom
+    Do not build and install your own packages from the packages\ folder.
 .PARAMETER NoReboot
     Never restart automatically. Windows Update still runs, but if it needs a restart the
     chain stops and tells you to restart and re-run.
@@ -58,6 +62,7 @@ param(
     [switch]$SkipChoco,
     [switch]$SkipWinget,
     [switch]$SkipDrivers,
+    [switch]$SkipCustom,
     [switch]$NoReboot,
     [switch]$Fresh,
     [switch]$OpenWinUtilGui
@@ -72,6 +77,9 @@ $WinUtilConf   = "$RepoRaw/winutil.json"
 $ChocoListUrl  = "$RepoRaw/choco-packages.txt"
 $WingetListUrl = "$RepoRaw/winget-packages.txt"
 $WinUtilUrl    = 'https://christitus.com/win'
+$RepoZipUrl    = 'https://github.com/change117/win-setup/archive/refs/heads/main.zip'
+$CustomFeed    = "$env:ProgramData\win-setup\feed"   # local Chocolatey source for your own packages
+$CustomSource  = 'win-setup'
 
 $StateKey        = 'HKLM:\SOFTWARE\win-setup'
 $ResumeTaskName  = 'win-setup-resume'
@@ -467,6 +475,66 @@ function Install-WingetList {
 }
 
 # ----------------------------------------------------------------------------
+# Your own packages (packages\<name>\, built into a local feed)
+# ----------------------------------------------------------------------------
+function Build-CustomPackages([string]$PackagesDir, [string]$OutDir) {
+    # Packs every packages\<name>\<name>.nuspec. Folders starting with _ are skipped
+    # (_shared, _templates). Returns the package IDs that packed.
+    $helpers = Join-Path $PackagesDir '_shared\winsetup-helpers.ps1'
+    $built = @()
+    foreach ($dir in Get-ChildItem -Path $PackagesDir -Directory | Where-Object { $_.Name -notlike '_*' }) {
+        $nuspec = Get-ChildItem -Path $dir.FullName -Filter '*.nuspec' | Select-Object -First 1
+        if (-not $nuspec) { Add-Result "custom: $($dir.Name)" 'FAIL' 'no .nuspec in folder'; continue }
+        $id = [string]([xml](Get-Content -Path $nuspec.FullName -Raw)).package.metadata.id
+        $tools = Join-Path $dir.FullName 'tools'
+        if ((Test-Path $helpers) -and (Test-Path $tools)) { Copy-Item -Path $helpers -Destination $tools -Force }
+        & choco pack $nuspec.FullName --out="$OutDir" --limit-output | Out-Host
+        if ($LASTEXITCODE -ne 0) { Add-Result "custom: $id" 'FAIL' "choco pack failed (exit $LASTEXITCODE)"; continue }
+        $built += $id
+    }
+    return $built
+}
+
+function Install-CustomPackages {
+    if (-not (Test-Choco)) { Add-Result 'Custom packages' 'FAIL' 'choco not available'; return }
+
+    # Get the packages\ folder: download the repo as a zip (no git needed on a fresh PC).
+    $work = Join-Path $env:TEMP 'win-setup-src'
+    if (Test-Path $work) { Remove-Item -Path $work -Recurse -Force }
+    New-Item -ItemType Directory -Path $work -Force | Out-Null
+    $zip = Join-Path $work 'repo.zip'
+    try {
+        Invoke-WebRequest -Uri $RepoZipUrl -OutFile $zip -UseBasicParsing -ErrorAction Stop
+        Expand-Archive -Path $zip -DestinationPath $work -Force
+    } catch {
+        Add-Result 'Custom packages' 'FAIL' "could not download repo: $($_.Exception.Message)"
+        return
+    }
+    $repoDir = Get-ChildItem -Path $work -Directory | Select-Object -First 1
+    $pkgDir  = if ($repoDir) { Join-Path $repoDir.FullName 'packages' }
+    if (-not $pkgDir -or -not (Test-Path $pkgDir)) { Add-Result 'Custom packages' 'SKIP' 'no packages folder in repo'; return }
+
+    # Rebuild the local feed from scratch so it always matches the repo.
+    New-Item -ItemType Directory -Path $CustomFeed -Force | Out-Null
+    Get-ChildItem -Path $CustomFeed -Filter '*.nupkg' | Remove-Item -Force
+    $ids = @(Build-CustomPackages -PackagesDir $pkgDir -OutDir $CustomFeed)
+    if ($ids.Count -eq 0) { Add-Result 'Custom packages' 'SKIP' 'none in packages\ yet'; return }
+
+    # Register the feed (priority 1 = checked before the community repo). It stays
+    # registered, so 'choco upgrade all' later includes your packages too.
+    & choco source add -n="$CustomSource" -s="$CustomFeed" --priority=1 --limit-output | Out-Null
+
+    Write-Host "    $($ids.Count) package(s): $($ids -join ', ')"
+    foreach ($id in $ids) {
+        # upgrade = install if missing, update if the version in the repo went up.
+        Write-Host "    choco upgrade $id"
+        & choco upgrade $id -y --no-progress | Out-Host
+        $code = $LASTEXITCODE
+        if ($code -in 0, 1641, 3010) { Add-Result "custom: $id" 'OK' } else { Add-Result "custom: $id" 'FAIL' "exit code $code" }
+    }
+}
+
+# ----------------------------------------------------------------------------
 # WinUtil
 # ----------------------------------------------------------------------------
 function Invoke-WinUtil {
@@ -585,6 +653,10 @@ try {
 
         Write-Step 'Chris Titus WinUtil (winutil.json)'
         if ($SkipWinUtil) { Add-Result 'WinUtil' 'SKIP' '-SkipWinUtil' } else { Invoke-WinUtil }
+
+        # Last, so Git/Node/Python etc. from the steps above are already installed.
+        Write-Step 'Your own packages (packages folder)'
+        if ($SkipCustom) { Add-Result 'Custom packages' 'SKIP' '-SkipCustom' } else { Install-CustomPackages }
 
         Set-State 'Phase' 'Done'
         Set-State 'Completed' 1

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- id must match the folder name. Pick one that is not on community.chocolatey.org. -->
+    <id>__ID__</id>
+    <!-- Bump this when you change the package so re-running win-setup updates it. -->
+    <version>1.0.0</version>
+    <title>__ID__</title>
+    <authors>change117</authors>
+    <description>Personal package: installs __ID__ from a GitHub release.</description>
+    <!-- Need another Chocolatey package first? Uncomment:
+    <dependencies>
+      <dependency id="python" />
+    </dependencies>
+    -->
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
